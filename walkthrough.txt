@@ -1,0 +1,120 @@
+Open virtual box and open KALI
+
+Create a folder and confirm whether you have downloaded the Try Hack Me OPENVPN provided
+
+>sudo apt install openvpn
+Run the vpn
+>sudo openvpn /path-to-file/file-name.ovpn
+example:sudo openvpn /home/kali/Desktop/Openvpn/undoingsled52.ovpn
+
+NOTE: make sure to leave the vpn running
+
+now you can access the network ip provided 
+
+Question 1:How many services are running under port 1000?
+ nmap <ip given> -T4
+ example:
+ nmap 10.10.138.169 -T4    
+Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-11 13:32 EST
+Nmap scan report for 10.10.138.169
+Host is up (0.22s latency).
+Not shown: 997 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+21/tcp   open  ftp
+80/tcp   open  http
+2222/tcp open  EtherNetIP-1
+
+Nmap done: 1 IP address (1 host up) scanned in 40.04 seconds
+ ANS-> 2
+
+
+QUESTION 2:
+What is running on the higher port?
+nmap <ip> sV 
+example:
+nmap 10.10.138.169 -sV
+Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-11 13:36 EST
+Nmap scan report for 10.10.138.169
+Host is up (0.27s latency).
+Not shown: 997 filtered tcp ports (no-response)
+PORT     STATE SERVICE VERSION
+21/tcp   open  ftp     vsftpd 3.0.3
+80/tcp   open  http    Apache httpd 2.4.18 ((Ubuntu))
+2222/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 51.88 seconds
+
+Question 3:
+What's the CVE you're using against the application?
+
+Here is where things get technical
+Youll need to find the hidden page first
+we'll use gobuster
+install gobuster
+>>sudo apt install gobuster
+
+the locate the wordlists for easy copying when writing the Gobuster code 
+
+example:
+$ gobuster dir -u http://10.10.138.169/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+===============================================================
+Gobuster v3.4
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.138.169/
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.4
+[+] Timeout:                 10s
+===============================================================
+2023/01/11 13:49:57 Starting gobuster in directory enumeration mode
+===============================================================
+/simple               (Status: 301) [Size: 315]
+ [--> http://10.10.138.169/simple/]
+
+
+>There is a hidden page called {/simple}
+>lets check it out
+
+> At the bottom of the page there is a version number for example:
+CMS Made Simple version 2.2.8
+
+>serch for exploits found for this version "exploit for CMS Made Simple version 2.2.8"
+
+Ans: CMS Made Simple < 2.2.10 - SQL Injection. {CVE-2019-9053} .
+
+QUESTION 4: 
+To what kind of vulnerability is the application vulnerable?
+
+CMS Made Simple < 2.2.10 - {SQL Injection}. CVE-2019-9053
+
+ANS: SQLI -> stand sfor sql Injection
+
+
+Question 5:
+
+What's the password?
+
+>we will need to run the exploit to crack the password
+>download the python file to run the exploit
+>to run a python file do:
+python filename.python
+
+>However our python file is written in python2 hence:
+>python2 filename.py
+
+
+>However we'll need to install a module named "termcolor"
+
+>pip install termcolor 
+
+I did this but it still did not work'~'
+This is because when you installed the module it was downloaded into python3 library
+this means we will need to copy the module back to python2.7 example code:
+sudo cp /usr/lib/python3/dist-packages/termcolor.py  /usr/lib/python2.7
+
+after copying we can run the code:
